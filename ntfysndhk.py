@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import json
 import os
 import threading
 import winsound
@@ -9,125 +10,105 @@ from pystray import Icon, Menu, MenuItem
 import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
+
+# .config example
+# {
+#     "スマートフォン連携": [
+#         {"target": "title", "match": "YouTube", "file": "C:\\Windows\\Media\\Windows Foreground.wav"},
+#         {"target": "title", "match": "X", "file": "C:\\Windows\\Media\\Windows Notify Messaging.wav"}
+#     ],
+#     "Notifications Visualizer": "C:\\Windows\\Media\\notify.wav"
+# }
+def load_config():
+    with open('.config', encoding='utf-8') as fd:
+        j = json.load(fd)
+        print(json.dumps(j, indent=2, ensure_ascii=False))
+        return j
+
+
 TITLE = 'Notification Sound Hook'
-SOUND_CONFIG = {
-    # app_name: dict
-    'スマートフォン連携': {
-        # title:  filename
-        'YouTube': r'C:\Windows\Media\Windows Foreground.wav',
-        'X': r'C:\Windows\Media\Windows Notify Messaging.wav',
-    },
-    # app_name: filename
-    'Notifications Visualizer': r'C:\Windows\Media\notify.wav',
-}
+SOUND_CONFIG = load_config()
 main_loop = None
-last_toast_ids = [-1]
+last_toast_ids = []
 
 
-def play_app_sound(app_name, title=None, body=None):
-    sound_path = None
-    if app_name in SOUND_CONFIG:
-        if isinstance(SOUND_CONFIG[app_name], dict):
-            if title in SOUND_CONFIG[app_name]:
-                sound_path = SOUND_CONFIG[app_name][title]
-        elif isinstance(SOUND_CONFIG[app_name], str):
-            sound_path = SOUND_CONFIG[app_name]
+def get_sound_path(app_name, title, body):
+    """ルールに基づいて適切なサウンドパスを返す"""
+    if app_name not in SOUND_CONFIG:
+        return None
+
+    config = SOUND_CONFIG[app_name]
+
+    # 単純な文字列指定の場合
+    if isinstance(config, str):
+        return config
+
+    # ルールリスト（dictのリスト）の場合
+    if isinstance(config, list):
+        for rule in config:
+            target_val = title if rule.get('target') == 'title' else body
+            if rule.get('match') in target_val:
+                return rule.get('file')
+
+    return None
+
+
+def play_app_sound(app_name, title="", body=""):
+    sound_path = get_sound_path(app_name, title, body)
+    if not sound_path:
+        return
+
     try:
-        print(f'{sound_path=}')
-        if isinstance(sound_path, str):
-            winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+        print(f'Playing: {sound_path}')
+        winsound.PlaySound(
+            sound_path,
+            winsound.SND_FILENAME | winsound.SND_ASYNC
+        )
     except Exception as e:
-        print(f'play sound rror: {e}')
-
-
-def run_asyncio_thread():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_notification_listener())
+        print(f'Play sound error: {e}')
 
 
 async def fetch_contents(listener):
     global last_toast_ids
 
-    print(f'>>> {last_toast_ids=}')
     try:
-        # get toast notifications list
-        toasts = list(await listener.get_notifications_async(notifications.NotificationKinds.TOAST))
+        toasts_raw = await listener.get_notifications_async(
+            notifications.NotificationKinds.TOAST
+        )
+        toasts = list(toasts_raw)
         if not toasts:
-            print('toast notifications are empty.')
             return
 
-        toast_ids = [toasts[i].id for i in range(len(toasts))]
-        print(f'{toast_ids=}')
-
-        # get latest toast ID
+        current_ids = [t.id for t in toasts]
         latest = toasts[-1]
-        latest_id = latest.id
-        print(f'{latest_id=}')
 
-        # FIXME: wrong function at fitst time
-        if last_toast_ids and latest_id not in last_toast_ids:
-            # get application name
+        # 初回起動時は音を鳴らさずIDリストの更新のみ行う
+        if not last_toast_ids:
+            last_toast_ids = current_ids
+            return
+
+        if latest.id not in last_toast_ids:
             app_name = latest.app_info.display_info.display_name
-
-            # get information from toast
-            title = 'No Title'
-            body = ''
+            title = ""
+            body = ""
 
             binding = latest.notification.visual.get_binding('ToastGeneric')
             if binding:
-                # examples:
-                # extract only <text>, no attributions
-                #
-                # <visual>
-                #   <binding template="ToastGeneric">
-                #     <text>YouTube</text>
-                #     <text>打首獄門同好会 -GOKUMON-</text>
-                #     <text>打首獄門同好会「10獄放送局」第67回</text>
-                #   </binding>
-                # </visual>
-                # 0: Phone App
-                # 1: channel name
-                # 2: title
-                #
-                # <visual>
-                #   <binding template="ToastGeneric">
-                #     <text>X</text>
-                #     <text>青木亞一人🎯アシュラシンドロームとTsukisamu Mutton Network(TMN)</text>
-                #     <text>会長ありがとうございました</text>
-                #   </binding>
-                # </visual>
-                # 0: Phone App
-                # 1: from
-                # 2: body
-
-                # construct title, body
                 elements = list(binding.get_text_elements())
+                # スマートフォン連携等の構造に合わせた抽出
                 if len(elements) > 0:
-                    # Phone App
-                    title = elements[0].text
+                    title = elements[0].text or ""
                 if len(elements) > 1:
-                    body = '\n'.join([elements[i].text for i in range(1, len(elements[1:]) + 1)])
+                    # 2枚目以降のテキストを結合
+                    body = "\n".join([e.text for e in elements[1:] if e.text])
 
-            lines = [
-                f'app_name: {app_name}',
-                f'title   : {title}',
-                f'body    :\n{body}',
-            ]
-            for line in lines:
-                print(line)
+            print(f'Detected: [{app_name}] {title} / {body[:30]}...')
+            play_app_sound(app_name, title, body)
 
-            play_app_sound(app_name, title=title, body=body)
-
-        # save toast list
-        del last_toast_ids
-        last_toast_ids = toast_ids
-
-        print(f'<<< {last_toast_ids=}')
+        last_toast_ids = current_ids
 
     except Exception as e:
-        # error handling includes 0x8000000B (E_BOUNDS)
-        print(f'(Skip) Error when retrieving information: {e}')
+        print(f'Retrieving error: {e}')
 
 
 def notification_handler(sender, _):
@@ -147,7 +128,7 @@ async def start_notification_listener():
         while True:
             await asyncio.sleep(1)
     else:
-        print('Notification access is not allowed, please check your settings.')
+        print('Access denied.')
 
 
 def setup():
@@ -155,17 +136,29 @@ def setup():
     dc = ImageDraw.Draw(image)
     dc.ellipse([2, 2, 62, 62], fill=(0, 255, 150))
 
-    def open_setting(self):
+    def open_setting(_, __):
         os.system('start ms-settings:notifications')
 
-    def on_quit(icon):
+    def on_quit(icon, _):
         icon.stop()
 
     menu = Menu(
-        MenuItem('Open notification setting', open_setting, default=True),
-        MenuItem('Exit', on_quit),
+        MenuItem('Open Settings', open_setting),
+        MenuItem('reload config', load_config),
+        MenuItem('Exit', on_quit)
     )
-    return Icon(name='PYTHON.win32.NotificationSoundHook', icon=image, title=TITLE, menu=menu)
+    return Icon(
+        'NotificationSoundHook',
+        icon=image,
+        title=TITLE,
+        menu=menu
+    )
+
+
+def run_asyncio_thread():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(start_notification_listener())
 
 
 if __name__ == "__main__":
