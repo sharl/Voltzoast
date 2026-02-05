@@ -77,7 +77,7 @@ async def fetch_contents(listener):
             binding = latest.notification.visual.get_binding('ToastGeneric')
             if binding:
                 # examples:
-                # ignore <image>, <group>, <subgroup>, ...
+                # extract only <text>, no attributions
                 #
                 # <visual>
                 #   <binding template="ToastGeneric">
@@ -112,7 +112,7 @@ async def fetch_contents(listener):
             lines = [
                 f'app_name: {app_name}',
                 f'title   : {title}',
-                f'nody    :\n{body}',
+                f'body    :\n{body}',
             ]
             for line in lines:
                 print(line)
