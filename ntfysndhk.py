@@ -10,6 +10,8 @@ from pystray import Icon, Menu, MenuItem
 import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
+from vvox import vvox
+
 
 # .config example
 # {
@@ -19,15 +21,20 @@ import winrt.windows.ui.notifications.management as management
 #     ],
 #     "Notifications Visualizer": "C:\\Windows\\Media\\notify.wav"
 # }
+SOUND_CONFIG = {}
+
+
 def load_config():
+    global SOUND_CONFIG
+
+    SOUND_CONFIG = {}
     with open('.config', encoding='utf-8') as fd:
-        j = json.load(fd)
-        print(json.dumps(j, indent=2, ensure_ascii=False))
-        return j
+        SOUND_CONFIG = json.load(fd)
+        print(json.dumps(SOUND_CONFIG, indent=2, ensure_ascii=False))
 
 
 TITLE = 'Notification Sound Hook'
-SOUND_CONFIG = load_config()
+load_config()
 main_loop = None
 last_toast_ids = []
 
@@ -46,9 +53,24 @@ def get_sound_path(app_name, title, body):
     # ルールリスト（dictのリスト）の場合
     if isinstance(config, list):
         for rule in config:
-            target_val = title if rule.get('target') == 'title' else body
-            if rule.get('match') in target_val:
-                return rule.get('file')
+            is_title = rule.get('title', '') == title
+            is_body = rule.get('body', '') in body
+            result = set([is_title, is_body])
+            # print('  rule', rule)
+            # print('result', result)
+            if result == {True}:
+                is_file = rule.get('file')
+                is_text = rule.get('text')
+                if is_file:
+                    return is_file
+                elif is_text:
+                    _title = title
+                    _body = body
+                    _from = body.split('\n')[0]
+                    text = is_text.format(**locals())
+                    print(f'Playing: {text}')
+                    vvox(text, speed=1.2)
+                    return None
 
     return None
 
@@ -59,7 +81,7 @@ def play_app_sound(app_name, title="", body=""):
         return
 
     try:
-        print(f'Playing: {sound_path}')
+        print(f'Playing: {sound_path} {type(sound_path)}')
         winsound.PlaySound(
             sound_path,
             winsound.SND_FILENAME | winsound.SND_ASYNC
