@@ -135,10 +135,6 @@ async def fetch_contents(listener):
 
             # AppInfo not implemented in some cases
             try:
-                print('latest', dir(latest))
-                print('app_info', dir(latest.app_info))
-                print('display_info', dir(latest.app_info.display_info))
-
                 if latest.app_info and latest.app_info.display_info:
                     app_name = latest.app_info.display_info.display_name
             except Exception:
