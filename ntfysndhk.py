@@ -81,7 +81,7 @@ def play_app_sound(app_name, title="", body=""):
         return
 
     try:
-        print(f'Playing: {sound_path} {type(sound_path)}')
+        print(f'Playing: {sound_path}')
         winsound.PlaySound(
             sound_path,
             winsound.SND_FILENAME | winsound.SND_ASYNC
