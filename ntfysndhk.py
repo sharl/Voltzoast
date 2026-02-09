@@ -129,9 +129,20 @@ async def fetch_contents(listener):
             return
 
         if latest.id not in last_toast_ids:
-            app_name = latest.app_info.display_info.display_name
+            app_name = 'Unknown'
             title = ""
             body = ""
+
+            # AppInfo not implemented in some cases
+            try:
+                print('latest', dir(latest))
+                print('app_info', dir(latest.app_info))
+                print('display_info', dir(latest.app_info.display_info))
+
+                if latest.app_info and latest.app_info.display_info:
+                    app_name = latest.app_info.display_info.display_name
+            except Exception:
+                pass
 
             binding = latest.notification.visual.get_binding('ToastGeneric')
             if binding:
