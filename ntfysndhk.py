@@ -64,10 +64,21 @@ def get_sound_path(app_name, title, body):
                 if is_file:
                     return is_file
                 elif is_text:
+                    lines = body.strip().split('\n')
                     _title = title
-                    _body = body
-                    _from = body.split('\n')[0]
-                    text = is_text.format(**locals())
+                    _from = lines[0]
+                    _body = body.strip()
+                    # insurance
+                    if len(lines) > 1:
+                        _body = ''.join(lines[1:])
+
+                    kvs = dict(locals())
+                    new = dict()
+                    # title, from, body に絞りたい
+                    for k in kvs:
+                        if k in ['_title', '_from', '_body']:
+                            new[k.removeprefix('_')] = kvs[k]
+                    text = is_text.format(**new)
                     print(f'Playing: {text}')
                     vvox(text, speed=1.2)
                     return None
@@ -124,7 +135,7 @@ async def fetch_contents(listener):
                     # 2枚目以降のテキストを結合
                     body = "\n".join([e.text for e in elements[1:] if e.text])
 
-            print(f'Detected: [{app_name}] {title} / {body[:30]}...')
+            print(f'Detected: [{app_name}] {title} / {body[:80]}...')
             play_app_sound(app_name, title, body)
 
         last_toast_ids = current_ids
