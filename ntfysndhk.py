@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import ctypes
 import json
 import os
 import threading
@@ -7,11 +8,18 @@ import winsound
 
 from PIL import Image, ImageDraw
 from pystray import Icon, Menu, MenuItem
+import darkdetect as dd
 import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
 from vvox import vvox
 
+PreferredAppMode = {
+    'Light': 0,
+    'Dark': 1,
+}
+# https://github.com/moses-palmer/pystray/issues/130
+ctypes.windll['uxtheme.dll'][135](PreferredAppMode[dd.theme()])
 
 # .config example
 # {
@@ -176,7 +184,7 @@ def setup():
         icon.stop()
 
     menu = Menu(
-        MenuItem('Open Settings', open_setting),
+        MenuItem('Open Notification Settings', open_setting, default=True),
         MenuItem('reload config', load_config),
         MenuItem('Exit', on_quit)
     )
