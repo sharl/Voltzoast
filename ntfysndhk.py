@@ -48,6 +48,10 @@ main_loop = None
 last_toast_ids = []
 
 
+def getNow():
+    return dt.now(tz(td(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+
+
 def get_sound_path(app_name, title, body):
     """ルールに基づいて適切なサウンドパスを返す"""
     if app_name not in SOUND_CONFIG:
@@ -89,7 +93,7 @@ def get_sound_path(app_name, title, body):
                         if k in ['_title', '_from', '_body']:
                             new[k.removeprefix('_')] = kvs[k]
                     text = is_text.format(**new)
-                    print(f'Playing: {text}')
+                    print(f'\033[93m{getNow()} {text}\033[0m')
                     vvox(text, speed=1.2)
                     return None
 
@@ -102,8 +106,7 @@ def play_app_sound(app_name, title='', body=''):
         return
 
     try:
-        now = dt.now(tz(td(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-        print(f'\033[93m{now} Playing: {app_name} {sound_path}\033[0m')
+        print(f'\033[93m{getNow()} Playing: {app_name} {sound_path}\033[0m')
         winsound.PlaySound(
             sound_path,
             winsound.SND_FILENAME | winsound.SND_ASYNC
@@ -153,8 +156,7 @@ async def fetch_contents(listener):
                     # 2枚目以降のテキストを結合
                     body = '\n'.join([e.text for e in elements[1:] if e.text])
 
-            now = dt.now(tz(td(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-            print(f'{now} Detected: [{app_name}] \033[2;37m{title} / {body}\033[m')
+            print(f'{getNow()} Detected: [{app_name}] \033[2;37m{title} / {body}\033[m')
 
             play_app_sound(app_name, title, body)
 
