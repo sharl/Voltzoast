@@ -3,6 +3,7 @@ import asyncio
 import ctypes
 import json
 import os
+from datetime import datetime as dt, timedelta as td, timezone as tz
 import threading
 import winsound
 
@@ -61,7 +62,8 @@ def get_sound_path(app_name, title, body):
     # ルールリスト（dictのリスト）の場合
     if isinstance(config, list):
         for rule in config:
-            is_title = rule.get('title', '') == title
+            rule_title = rule.get('title', '')
+            is_title = (rule_title == title) or (rule_title in title)
             is_body = rule.get('body', '') in body
             result = set([is_title, is_body])
             # print('  rule', rule)
@@ -94,13 +96,14 @@ def get_sound_path(app_name, title, body):
     return None
 
 
-def play_app_sound(app_name, title="", body=""):
+def play_app_sound(app_name, title='', body=''):
     sound_path = get_sound_path(app_name, title, body)
     if not sound_path:
         return
 
     try:
-        print(f'Playing: {sound_path}')
+        now = dt.now(tz(td(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+        print(f'\033[93m{now} Playing: {app_name} {sound_path}\033[0m')
         winsound.PlaySound(
             sound_path,
             winsound.SND_FILENAME | winsound.SND_ASYNC
@@ -145,12 +148,14 @@ async def fetch_contents(listener):
                 elements = list(binding.get_text_elements())
                 # スマートフォン連携等の構造に合わせた抽出
                 if len(elements) > 0:
-                    title = elements[0].text or ""
+                    title = elements[0].text or ''
                 if len(elements) > 1:
                     # 2枚目以降のテキストを結合
-                    body = "\n".join([e.text for e in elements[1:] if e.text])
+                    body = '\n'.join([e.text for e in elements[1:] if e.text])
 
-            print(f'Detected: [{app_name}] {title} / {body[:80]}...')
+            now = dt.now(tz(td(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+            print(f'{now} Detected: [{app_name}] \033[2;37m{title} / {body}\033[m')
+
             play_app_sound(app_name, title, body)
 
         last_toast_ids = current_ids
