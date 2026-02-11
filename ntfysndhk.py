@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime as dt, timedelta as td, timezone as tz
 import asyncio
 import ctypes
 import json
 import os
-from datetime import datetime as dt, timedelta as td, timezone as tz
 import threading
 import winsound
 
@@ -24,11 +24,17 @@ ctypes.windll['uxtheme.dll'][135](PreferredAppMode[dd.theme()])
 
 # .config example
 # {
-#     "スマートフォン連携": [
-#         {"target": "title", "match": "YouTube", "file": "C:\\Windows\\Media\\Windows Foreground.wav"},
-#         {"target": "title", "match": "X", "file": "C:\\Windows\\Media\\Windows Notify Messaging.wav"}
+#     "Google Chrome": [
+#         {"title": "YouTube", "body": "ライブ配信が始まります", "text": "{from}"},
+#         {"title": "🔴", "body": "ライブ配信中", "text": "{title} {from}"}
 #     ],
-#     "Notifications Visualizer": "C:\\Windows\\Media\\notify.wav"
+#     "スマートフォン連携": [
+#         {"title": "X", "file": "C:\\Windows\\Media\\Windows Notify Messaging.wav"},
+#
+#         {"title": "DQⅩツール","body": "錬金釜",  "text": "{body}"},
+#         {"title": "DQⅩツール", "file": "C:\\Windows\\Media\\nc308516m.wav"}
+#     ],
+#     "Unknown": "C:\\Windows\\Media\\Windows Foreground.wav"
 # }
 SOUND_CONFIG = {}
 
@@ -93,7 +99,8 @@ def get_sound_path(app_name, title, body):
                         if k in ['_title', '_from', '_body']:
                             new[k.removeprefix('_')] = kvs[k]
                     text = is_text.format(**new)
-                    print(f'\033[93m{getNow()} {text}\033[0m')
+                    print(f'DEBUG\n{_title=}\n{_from=}\n{_body=}')
+                    print(f'\033[93m{getNow()} [{app_name}] {text}\033[0m')
                     vvox(text, speed=1.2)
                     return None
 
@@ -106,7 +113,7 @@ def play_app_sound(app_name, title='', body=''):
         return
 
     try:
-        print(f'\033[93m{getNow()} Playing: {app_name} {sound_path}\033[0m')
+        print(f'\033[93m{getNow()} [{app_name}] {title=} {body=} {sound_path}\033[0m')
         winsound.PlaySound(
             sound_path,
             winsound.SND_FILENAME | winsound.SND_ASYNC
@@ -156,7 +163,7 @@ async def fetch_contents(listener):
                     # 2枚目以降のテキストを結合
                     body = '\n'.join([e.text for e in elements[1:] if e.text])
 
-            print(f'{getNow()} Detected: [{app_name}] \033[2;37m{title} / {body}\033[m')
+            print(f'{getNow()} Detected: [{app_name=}] {title=} {body=}')
 
             play_app_sound(app_name, title, body)
 
