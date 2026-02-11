@@ -74,7 +74,8 @@ def get_sound_path(app_name, title, body):
         for rule in config:
             rule_title = rule.get('title', '')
             is_title = (rule_title == title) or (rule_title in title)
-            is_body = rule.get('body', '') in body
+            rule_body = rule.get('body', '')
+            is_body = rule_body in body
             result = set([is_title, is_body])
             # print('  rule', rule)
             # print('result', result)
@@ -82,6 +83,7 @@ def get_sound_path(app_name, title, body):
                 is_file = rule.get('file')
                 is_text = rule.get('text')
                 if is_file:
+                    print(f'Match rule {rule_title=} {rule_body=}')
                     return is_file
                 elif is_text:
                     lines = body.strip().split('\n')
@@ -90,7 +92,7 @@ def get_sound_path(app_name, title, body):
                     _body = body.strip()
                     # insurance
                     if len(lines) > 1:
-                        _body = ''.join(lines[1:])
+                        _body = '\n'.join(lines[1:])
 
                     kvs = dict(locals())
                     new = dict()
@@ -99,7 +101,7 @@ def get_sound_path(app_name, title, body):
                         if k in ['_title', '_from', '_body']:
                             new[k.removeprefix('_')] = kvs[k]
                     text = is_text.format(**new)
-                    print(f'DEBUG\n{_title=}\n{_from=}\n{_body=}')
+                    print(f'Match rule {rule_title=} {rule_body=} {_title=}\n{_from=}\n{_body=}')
                     print(f'\033[93m{getNow()} [{app_name}] {text}\033[0m')
                     vvox(text, speed=1.2)
                     return None
