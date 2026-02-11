@@ -103,7 +103,12 @@ def get_sound_path(app_name, title, body):
                     text = is_text.format(**new)
                     print(f'Match rule {rule_title=} {rule_body=} {_title=}\n{_from=}\n{_body=}')
                     print(f'\033[93m{getNow()} [{app_name}] {text}\033[0m')
-                    vvox(text, speed=1.2)
+                    vvox(
+                        text,
+                        speaker=int(rule.get('speaker', 3)),
+                        speed=float(rule.get('speed', 1.2)),
+                        volume=float(rule.get('volume', 1.0)),
+                    )
                     return None
 
     return None
