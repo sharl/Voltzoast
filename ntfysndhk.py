@@ -70,6 +70,30 @@ def get_sound_path(app_name, title, body):
         return config
 
     # ルールリスト（dictのリスト）の場合
+    # "title":
+    # "body":
+    #
+    # 2026/02/12 21:14:53 Detected: [app_name='Google Chrome']
+    # title='🔴 【 #飲酒配信 】おもしろいホラゲだったね！呑み足りなかったぜ【こそぎ/ #心削ぎ #Vtuber】'
+    # body='こそぎ(心削ぎ) / kosogi がライブ配信中'
+    #
+    # Match rule
+    # rule_title='🔴'
+    # rule_body='ライブ配信中'
+    # _title='🔴 【 #飲酒配信 】おもしろいホラゲだったね！呑み足りなかったぜ【こそぎ/ #心削ぎ #Vtuber】'
+    # _from='こそぎ(心削ぎ) / kosogi がライブ配信中'
+    # _body='こそぎ(心削ぎ) / kosogi がライブ配信中'    
+    #
+    # 2026/02/12 22:11:42 Detected: [app_name='Google Chrome']
+    # title='Bôa'
+    # body='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'
+    #
+    # Match rule
+    # rule_title=''
+    # rule_body=''
+    # _title='Bôa'
+    # _from='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'
+    # _body='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'    
     if isinstance(config, list):
         for rule in config:
             rule_title = rule.get('title', '')
