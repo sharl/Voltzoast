@@ -14,6 +14,7 @@ import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
 from vvox import vvox
+from Switchbot import Switchbot
 
 PreferredAppMode = {
     'Light': 0,
@@ -49,6 +50,9 @@ def load_config():
 
 
 TITLE = 'Notification Sound Hook'
+sb = Switchbot()
+sb.get_device_list()
+
 load_config()
 main_loop = None
 last_toast_ids = []
@@ -82,7 +86,7 @@ def get_sound_path(app_name, title, body):
     # rule_body='ライブ配信中'
     # _title='🔴 【 #飲酒配信 】おもしろいホラゲだったね！呑み足りなかったぜ【こそぎ/ #心削ぎ #Vtuber】'
     # _from='こそぎ(心削ぎ) / kosogi がライブ配信中'
-    # _body='こそぎ(心削ぎ) / kosogi がライブ配信中'    
+    # _body='こそぎ(心削ぎ) / kosogi がライブ配信中'
     #
     # 2026/02/12 22:11:42 Detected: [app_name='Google Chrome']
     # title='Bôa'
@@ -93,7 +97,7 @@ def get_sound_path(app_name, title, body):
     # rule_body=''
     # _title='Bôa'
     # _from='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'
-    # _body='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'    
+    # _body='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'
     if isinstance(config, dict):
         config = [config]
     if isinstance(config, list):
@@ -108,9 +112,14 @@ def get_sound_path(app_name, title, body):
             if result == {True}:
                 is_file = rule.get('file')
                 is_text = rule.get('text')
+
+                # device power on
                 is_device = rule.get('device')
                 if is_device:
                     print(f'{is_device=}')
+                    deviceID = sb.get_device_ID(is_device)
+                    if deviceID:
+                        sb.set_device_power(deviceID, 'on')
 
                 if is_file:
                     print(f'Match rule {rule_title=} {rule_body=}')
