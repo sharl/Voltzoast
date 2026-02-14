@@ -94,6 +94,8 @@ def get_sound_path(app_name, title, body):
     # _title='Bôa'
     # _from='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'
     # _body='The guitar has been at the heart of Bôa’s sound for years 🖤 #NationalGuitarDay 🎸'    
+    if isinstance(config, dict):
+        config = [config]
     if isinstance(config, list):
         for rule in config:
             rule_title = rule.get('title', '')
@@ -106,6 +108,10 @@ def get_sound_path(app_name, title, body):
             if result == {True}:
                 is_file = rule.get('file')
                 is_text = rule.get('text')
+                is_device = rule.get('device')
+                if is_device:
+                    print(f'{is_device=}')
+
                 if is_file:
                     print(f'Match rule {rule_title=} {rule_body=}')
                     return is_file
@@ -165,13 +171,14 @@ async def fetch_contents(listener):
             return
 
         current_ids = [t.id for t in toasts]
-        latest = toasts[-1]
-
-        # 初回起動時は音を鳴らさずIDリストの更新のみ行う
-        if not last_toast_ids:
+        print(f'{last_toast_ids=}')
+        print(f'   {current_ids=}')
+        if not current_ids:
+            print('toast history cleared')
             last_toast_ids = current_ids
             return
 
+        latest = toasts[-1]
         if latest.id not in last_toast_ids:
             app_name = 'Unknown'
             title = ""
