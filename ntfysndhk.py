@@ -116,10 +116,10 @@ def get_sound_path(app_name, title, body):
                 # device power on
                 is_device = rule.get('device')
                 if is_device:
-                    print(f'{is_device=}')
                     deviceID = sb.get_device_ID(is_device)
                     if deviceID:
                         sb.set_device_power(deviceID, 'on')
+                        print(f'{is_device} の電源をONにしました')
 
                 if is_file:
                     print(f'Match rule {rule_title=} {rule_body=}')
