@@ -4,6 +4,10 @@ Transform your Windows notifications into physical actions: Automate SwitchBot, 
 
 推しの配信をリアタイしたい層向けの機能として「**推しの配信が始まったら首輪に電撃を流す**」ことができます
 
+### 概要
+
+Windows Toast notifications to SwitchBot, VOICEVOX, and Audio automation hub.
+
 ### 事前準備
 
 - **コンセントにつなぐと電流が流れる首輪を用意してください (最重要項目)**
@@ -39,7 +43,7 @@ https://qiita.com/yamanohappa/items/b75d069e3cb0708d8709
 
 ### .switchbot
 
-アプリと同じ場所に配置してください  
+voltzoast.exe と同じ場所に配置してください  
 これがないと起動しません
 
 ```
@@ -49,9 +53,9 @@ https://qiita.com/yamanohappa/items/b75d069e3cb0708d8709
 }
 ```
 
-### .config
+### .config (設定ファイル)
 
-アプリと同じ場所に配置してください  
+`sample.config` をリネームして voltzoast.exe と同じ場所に配置してください  
 
 ```
 {
@@ -68,15 +72,9 @@ https://qiita.com/yamanohappa/items/b75d069e3cb0708d8709
 
 #### 設定できるパラメーター
 
-詳細はあとで
-
-- title
-- body
-- speaker
-- volume
-- speed
-- file
-- text
-  - title
-  - from
-  - body
+title	通知のタイトルに含まれる文字列を指定します
+body	通知の本文に含まれる文字列を指定します
+device	SwitchBot で取得できるデバイス名を指定します
+speaker	VOICEVOX の話者 ID を指定します（デフォルトは 3「ずんだもん(ノーマル)」)
+text	読み上げる文章 {title}, {from}, {body} が変数として使えます
+file	再生したい .wav ファイルのフルパスを指定します
