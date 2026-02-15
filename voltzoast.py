@@ -13,8 +13,9 @@ import darkdetect as dd
 import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
-from vvox import vvox
 from Switchbot import Switchbot
+from utils import resource_path
+from vvox import vvox
 
 PreferredAppMode = {
     'Light': 0,
@@ -49,7 +50,17 @@ def load_config():
         print(json.dumps(SOUND_CONFIG, indent=2, ensure_ascii=False))
 
 
-TITLE = 'Notification Sound Hook'
+def getVersion():
+    v = 'test'
+    try:
+        with open(resource_path('Assets/version.txt')) as fd:
+            v = fd.read().strip().removeprefix('v')
+    except Exception:
+        pass
+    return v
+
+
+TITLE = f'Voltzoast {getVersion()}'
 sb = Switchbot()
 sb.get_device_list()
 
@@ -257,7 +268,7 @@ def setup():
         MenuItem('Exit', on_quit)
     )
     return Icon(
-        'NotificationSoundHook',
+        TITLE,
         icon=image,
         title=TITLE,
         menu=menu
