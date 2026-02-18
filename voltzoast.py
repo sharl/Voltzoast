@@ -14,7 +14,7 @@ import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
 from Switchbot import Switchbot
-from utils import resource_path
+from utils import resource_path, setup_program
 from vvox import vvox
 
 PreferredAppMode = {
@@ -60,7 +60,10 @@ def getVersion():
     return v
 
 
-TITLE = f'Voltzoast {getVersion()}'
+APP_NAME = 'Voltzoast'
+APP_ID = f'Sharl.{APP_NAME}.App'
+TITLE = f'{APP_NAME} {getVersion()}'
+
 sb = Switchbot()
 sb.get_device_list()
 
@@ -240,8 +243,12 @@ async def start_notification_listener():
     global main_loop
     main_loop = asyncio.get_running_loop()
 
+    # AUMIDセットやショートカット作成が完了するのを少し待つ
+    await asyncio.sleep(2)
+
     listener = management.UserNotificationListener.current
     status = await listener.request_access_async()
+    print(f"Listener Access Status: {status}")
 
     if status == management.UserNotificationListenerAccessStatus.ALLOWED:
         listener.add_notification_changed(notification_handler)
@@ -249,6 +256,8 @@ async def start_notification_listener():
             await asyncio.sleep(1)
     else:
         print('Access denied.')
+        import time
+        time.sleep(10)
 
 
 def setup():
@@ -282,5 +291,7 @@ def run_asyncio_thread():
 
 
 if __name__ == "__main__":
+    setup_program(APP_NAME, APP_ID)
+
     threading.Thread(target=run_asyncio_thread, daemon=True).start()
     setup().run()

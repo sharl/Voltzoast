@@ -1,0 +1,1 @@
+Sharl.{APP_NAME}.win32app
