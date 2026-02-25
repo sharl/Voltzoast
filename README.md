@@ -43,7 +43,7 @@ https://qiita.com/yamanohappa/items/b75d069e3cb0708d8709
 
 ### .switchbot
 
-voltzoast.exe と同じ場所に配置してください  
+voltzoast.py と同じ場所に配置してください  
 これがないと起動しません
 
 ```
@@ -55,7 +55,7 @@ voltzoast.exe と同じ場所に配置してください
 
 ### .config (設定ファイル)
 
-`sample.config` をリネームして voltzoast.exe と同じ場所に配置してください  
+`sample.config` をリネームして voltzoast.py と同じ場所に配置してください
 
 ```
 {
@@ -72,9 +72,24 @@ voltzoast.exe と同じ場所に配置してください
 
 #### 設定できるパラメーター
 
-title	通知のタイトルに含まれる文字列を指定します
-body	通知の本文に含まれる文字列を指定します
-device	SwitchBot で取得できるデバイス名を指定します
-speaker	VOICEVOX の話者 ID を指定します（デフォルトは 3「ずんだもん(ノーマル)」)
-text	読み上げる文章 {title}, {from}, {body} が変数として使えます
-file	再生したい .wav ファイルのフルパスを指定します
+|||
+|-------|-------|
+|title  |通知のタイトルに含まれる文字列を指定します|
+|body   |通知の本文に含まれる文字列を指定します|
+|device |SwitchBot のアプリで設定されているデバイス名を指定します|
+|speaker|VOICEVOX の話者 ID を指定します（デフォルトは 3「ずんだもん(ノーマル)」)|
+|text   |VOICEVOX で読み上げる文章 `{title}`  `{from}` `{body}` が変数として使えます|
+|file   |再生したい .wav ファイルのフルパスを指定します|
+
+### 実行方法
+
+```
+git clone https://github.com/sharl/Voltzoast.git
+cd Voltzoast
+pip install -r requirements.txt
+python voltzoast.py
+```
+
+### TODO
+
+exe 化
