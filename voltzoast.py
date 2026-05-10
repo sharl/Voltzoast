@@ -4,7 +4,9 @@ import asyncio
 import ctypes
 import json
 import os
+import re
 import threading
+import unicodedata
 import winsound
 
 from PIL import Image, ImageDraw
@@ -39,6 +41,15 @@ ctypes.windll['uxtheme.dll'][135](PreferredAppMode[dd.theme()])
 #     "Unknown": "C:\\Windows\\Media\\Windows Foreground.wav"
 # }
 SOUND_CONFIG = {}
+TARGET_DOMAINS = [
+    r'youtube\.com',
+    r'youtu\.be',
+    r't\.co',
+    r'bit\.ly',
+    r'fb\.me',
+    r'github\.com',
+    r'x\.com',
+]
 
 
 def load_config():
@@ -154,8 +165,27 @@ def get_sound_path(app_name, title, body):
                         if k in ['_title', '_from', '_body']:
                             new[k.removeprefix('_')] = kvs[k]
                     text = is_text.format(**new)
+                    print(f'before {text=}')
+
+                    domain_pattern = r'(' + '|'.join(TARGET_DOMAINS) + r')/[a-zA-Z0-9._/-]*'
+                    protocol_url_pattern = r'https?://[\w/:%#\$&\?\(\)~\.=\+\-]+'
+                    # VOICEVOX にしゃべらせるセリフから URL やハッシュタグを削除
+                    text = unicodedata.normalize('NFC', text)                                   # NFC 正規化
+                    text = re.sub(protocol_url_pattern, '', text)                               # URL 削除
+                    text = re.sub(domain_pattern, '', text)                                     # 特定ドメイン URL 削除
+                    text = re.sub(r'#[0-9A-Za-z_一-龠ぁ-んァ-ヶーａ-ｚＡ-Ｚ]+', '', text)       # ハッシュタグ削除
+                    # 省略された場合、最後に付与される文字(…)を削除
+                    text = text.removesuffix('\u2026')
+                    # 連続する空白をまとめる
+                    text = re.sub(r'\s+', ' ', text)
+                    text = text.strip()
+
+                    print(f'after  {text=}')
+                    if not text:
+                        return None
+
                     print(f'Match rule {rule_title=} {rule_body=} {_title=}\n{_from=}\n{_body=}')
-                    print(f'\033[93m{getNow()} [{app_name}] {text}\033[0m')
+                    print(f'{getNow()} [{app_name}] \033[93m{text}\033[0m')
                     vvox(
                         text,
                         speaker=int(rule.get('speaker', 3)),
