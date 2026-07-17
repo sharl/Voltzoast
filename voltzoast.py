@@ -16,7 +16,7 @@ import winrt.windows.ui.notifications as notifications
 import winrt.windows.ui.notifications.management as management
 
 from Switchbot import Switchbot
-from utils import resource_path, setup_program
+from utils import resource_path
 from vvox import vvox
 
 PreferredAppMode = {
@@ -48,7 +48,7 @@ TARGET_DOMAINS = [
     r'bit\.ly',
     r'fb\.me',
     r'github\.com',
-    r'x\.com',
+    r'(pic\.)?x\.com',
 ]
 
 
@@ -321,7 +321,5 @@ def run_asyncio_thread():
 
 
 if __name__ == "__main__":
-    setup_program(APP_NAME, APP_ID)
-
     threading.Thread(target=run_asyncio_thread, daemon=True).start()
     setup().run()
