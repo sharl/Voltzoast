@@ -49,6 +49,7 @@ TARGET_DOMAINS = [
     r'fb\.me',
     r'github\.com',
     r'(pic\.)?x\.com',
+    r'tinyurl\.com',
 ]
 
 
