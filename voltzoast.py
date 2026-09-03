@@ -174,6 +174,7 @@ def get_sound_path(app_name, title, body):
                     text = re.sub(protocol_url_pattern, '', text)                               # URL 削除
                     text = re.sub(domain_pattern, '', text)                                     # 特定ドメイン URL 削除
                     text = re.sub(r'#[0-9A-Za-z_一-龠ぁ-んァ-ヶーａ-ｚＡ-Ｚ]+', '', text)       # ハッシュタグ削除
+                    text = re.sub(r'@[0-9A-Za-z_\.]+:', '', text)                               # RP時のmention削除
                     # 省略された場合、最後に付与される文字(…)を削除
                     text = text.removesuffix('\u2026')
                     # 連続する空白をまとめる
