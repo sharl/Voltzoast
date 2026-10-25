@@ -81,8 +81,6 @@ sb = Switchbot()
 sb.get_device_list()
 
 load_config()
-main_loop = None
-last_toast_ids = []
 
 
 def getNow():
@@ -215,82 +213,53 @@ def play_app_sound(app_name, title='', body=''):
         print(f'Play sound error: {e}')
 
 
-async def fetch_contents(listener):
-    global last_toast_ids
+def process_single_notification(n):
+    app_name = 'Unknown'
+    title = ""
+    body = ""
 
-    try:
-        toasts_raw = await listener.get_notifications_async(
-            notifications.NotificationKinds.TOAST
-        )
-        toasts = list(toasts_raw)
-        if not toasts:
-            return
+    if n.app_info and n.app_info.display_info:
+        app_name = n.app_info.display_info.display_name
 
-        current_ids = [t.id for t in toasts]
-        print(f'{last_toast_ids=}')
-        print(f'   {current_ids=}')
-        if not current_ids:
-            print('toast history cleared')
-            last_toast_ids = current_ids
-            return
+    binding = n.notification.visual.get_binding('ToastGeneric')
+    if binding:
+        elements = binding.get_text_elements()
+        if len(elements) > 0:
+            title = elements[0].text or ''
+        if len(elements) > 1:
+            body = '\n'.join([e.text for e in elements[1:] if e.text])
 
-        latest = toasts[-1]
-        if latest.id not in last_toast_ids:
-            app_name = 'Unknown'
-            title = ""
-            body = ""
-
-            # AppInfo not implemented in some cases
-            try:
-                if latest.app_info and latest.app_info.display_info:
-                    app_name = latest.app_info.display_info.display_name
-            except Exception:
-                pass
-
-            binding = latest.notification.visual.get_binding('ToastGeneric')
-            if binding:
-                elements = list(binding.get_text_elements())
-                # スマートフォン連携等の構造に合わせた抽出
-                if len(elements) > 0:
-                    title = elements[0].text or ''
-                if len(elements) > 1:
-                    # 2枚目以降のテキストを結合
-                    body = '\n'.join([e.text for e in elements[1:] if e.text])
-
-            print(f'{getNow()} Detected: [{app_name=}] {title=} {body=}')
-
-            play_app_sound(app_name, title, body)
-
-        last_toast_ids = current_ids
-
-    except Exception as e:
-        print(f'Retrieving error: {e}')
-
-
-def notification_handler(sender, _):
-    if main_loop:
-        asyncio.run_coroutine_threadsafe(fetch_contents(sender), main_loop)
+    print(f'{getNow()} Detected: [{app_name=}] {title=} {body=}')
+    play_app_sound(app_name, title, body)
 
 
 async def start_notification_listener():
-    global main_loop
-    main_loop = asyncio.get_running_loop()
-
-    # AUMIDセットやショートカット作成が完了するのを少し待つ
-    await asyncio.sleep(2)
-
     listener = management.UserNotificationListener.current
     status = await listener.request_access_async()
     print(f"Listener Access Status: {status}")
 
-    if status == management.UserNotificationListenerAccessStatus.ALLOWED:
-        listener.add_notification_changed(notification_handler)
-        while True:
-            await asyncio.sleep(1)
-    else:
-        print('Access denied.')
-        import time
-        time.sleep(10)
+    last_notification_ids = set()
+    try:
+        initial_toasts = await listener.get_notifications_async(notifications.NotificationKinds.TOAST)
+        last_notification_ids = {n.id for n in initial_toasts}
+    except Exception:
+        pass
+
+    while True:
+        notifs = await listener.get_notifications_async(notifications.NotificationKinds.TOAST)
+        current_ids = {n.id for n in notifs}
+
+        # check new notif
+        new_ids = current_ids - last_notification_ids
+        if new_ids:
+            for n in notifs:
+                if n.id in new_ids:
+                    # new notification
+                    process_single_notification(n)
+
+        last_notification_ids = current_ids
+
+        await asyncio.sleep(1)
 
 
 def setup():
