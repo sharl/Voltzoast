@@ -49,6 +49,7 @@ TARGET_DOMAINS = [
     r'fb\.me',
     r'github\.com',
     r'(pic\.)?x\.com',
+    r'marshmallow-qa\.com',
     r'tinyurl\.com',
 ]
 
@@ -168,7 +169,7 @@ def get_sound_path(app_name, title, body):
                     text = is_text.format(**new)
                     print(f'before {text=}')
 
-                    domain_pattern = r'(' + '|'.join(TARGET_DOMAINS) + r')/[a-zA-Z0-9._/-]*'
+                    domain_pattern = r'(' + '|'.join(TARGET_DOMAINS) + r')/[a-zA-Z0-9./=\?_-]*'
                     protocol_url_pattern = r'https?://[\w/:%#\$&\?\(\)~\.=\+\-]+'
                     # VOICEVOX にしゃべらせるセリフから URL やハッシュタグを削除
                     text = unicodedata.normalize('NFC', text)                                   # NFC 正規化
