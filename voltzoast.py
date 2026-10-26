@@ -218,8 +218,12 @@ def process_single_notification(n):
     title = ""
     body = ""
 
-    if n.app_info and n.app_info.display_info:
-        app_name = n.app_info.display_info.display_name
+    # guard unknown app
+    try:
+        if n.app_info and n.app_info.display_info:
+            app_name = n.app_info.display_info.display_name
+    except Exception:
+        pass
 
     binding = n.notification.visual.get_binding('ToastGeneric')
     if binding:
