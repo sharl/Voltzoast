@@ -17,6 +17,7 @@ import winrt.windows.ui.notifications.management as management
 
 from Switchbot import Switchbot
 from utils import resource_path
+from dictime import dictime
 from vvox import vvox
 
 PreferredAppMode = {
@@ -166,6 +167,9 @@ def get_sound_path(app_name, title, body):
                             new[k.removeprefix('_')] = kvs[k]
                     text = is_text.format(**new)
                     print(f'before {text=}')
+
+                    # 時刻を読み上げ用に変換 12:34 -> 12時34分
+                    text = dictime(text)
 
                     domain_pattern = r'(' + '|'.join(TARGET_DOMAINS) + r')/[a-zA-Z0-9./=\?_-]*'
                     protocol_url_pattern = r'https?://[\w/:%#\$&\?\(\)~\.=\+\-]+'
