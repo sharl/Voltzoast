@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime as dt
 import re
+
+
+def dicdate(text: str) -> str:
+    date_pattern = re.compile(r'(\d{1,2}/\d{1,2})')
+    matches = re.findall(date_pattern, text)
+    if matches:
+        for pat in matches:
+            yy = dt.now().year
+            leap = (yy % 4 == 0 and (yy % 100 != 0 or yy % 400 == 0))
+
+            mm, dd = [int(mmdd) for mmdd in pat.split('/')]
+            if (mm in (4, 6, 9, 11) and dd > 30) or (mm == 2 and dd > (28 + leap)):
+                continue
+            if dd == 0 or dd > 31:
+                continue
+            repl = f'{mm}月{dd}日'
+            text = text.replace(pat, repl)
+
+    return text
 
 
 def dictime(text: str) -> str:
@@ -25,6 +45,16 @@ def dictime(text: str) -> str:
 
 
 if __name__ == '__main__':
+    # test dicdate
+    for i in range(101, 1231 + 1):
+        mm = i // 100
+        dd = i % 100
+        text = f'今日は{mm}/{dd}です'
+        repl = dicdate(text)
+        if '月' in repl and '日' in repl:
+            print(repl)
+
+    # test dictime
     for i in range(0, 2359 + 1):
         t = f'{i:04d}'
         hh = t[:2]

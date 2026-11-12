@@ -17,7 +17,7 @@ import winrt.windows.ui.notifications.management as management
 
 from Switchbot import Switchbot
 from utils import resource_path
-from dictime import dictime
+from dictime import dicdate, dictime
 from vvox import vvox
 
 PreferredAppMode = {
@@ -168,6 +168,8 @@ def get_sound_path(app_name, title, body):
                     text = is_text.format(**new)
                     print(f'before {text=}')
 
+                    # 日付を読み上げ用に変換 12/25 -> 12月25日
+                    text = dicdate(text)
                     # 時刻を読み上げ用に変換 12:34 -> 12時34分
                     text = dictime(text)
 
