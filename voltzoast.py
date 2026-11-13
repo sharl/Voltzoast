@@ -17,7 +17,7 @@ import winrt.windows.ui.notifications.management as management
 
 from Switchbot import Switchbot
 from utils import resource_path
-from dictime import dicdate, dictime
+from dictation import dicdate, dictime
 from vvox import vvox
 
 PreferredAppMode = {
